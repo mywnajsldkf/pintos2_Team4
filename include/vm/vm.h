@@ -27,6 +27,7 @@ enum vm_type {
 #include "vm/uninit.h"
 #include "vm/anon.h"
 #include "vm/file.h"
+#include "hash.h"
 #ifdef EFILESYS
 #include "filesys/page_cache.h"
 #endif
@@ -111,4 +112,6 @@ void vm_dealloc_page (struct page *page);
 bool vm_claim_page (void *va);
 enum vm_type page_get_type (struct page *page);
 
+uint64_t hashing (const struct hash_elem *e, void *aux);
+bool hash_less (struct hash_elem *a, struct hash_elem *b, void *aux);
 #endif  /* VM_VM_H */
