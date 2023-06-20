@@ -42,22 +42,47 @@ static struct frame *vm_evict_frame (void);
 /* Create the pending page object with initializer. If you want to create a
  * page, do not create it directly and make it through this function or
  * `vm_alloc_page`. */
+// upage: 생성될 uninit 페이지의 가상 주소를 가리키는 포인터
 bool
 vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
         vm_initializer *init, void *aux) {
 
+    // ✅ TEST : vm_alloc_page_with_initializer
+    // bool unit_test_vm_alloc_page_with_initializer = false;
     ASSERT (VM_TYPE(type) != VM_UNINIT)
 
     struct supplemental_page_table *spt = &thread_current ()->spt;
 
     /* Check wheter the upage is already occupied or not. */
-    if (spt_find_page (spt, upage) == NULL) {
+    // 0. spt_find_page로 `upage`가 이미 할당되었는지 확인한다.
+    if (spt_find_page (spt, upage) == NULL) {   
         /* TODO: Create the page, fetch the initialier according to the VM type,
          * TODO: and then create "uninit" page struct by calling uninit_new. You
          * TODO: should modify the field after calling the uninit_new. */
+        // 1. 새로운 페이지를 생성한다. : 가상 메모리와 관련된 정보를 갖는다.
+        struct page *p = (struct page *)malloc(sizeof(struct page));
+    	bool (*page_initializer) (struct page *, enum vm_type, void *);
 
+        // 2. VM 타입에 따른 초기화 함수를 호출한다.
+        switch (VM_TYPE(type))
+        {
+        case VM_ANON:
+            page_initializer = anon_initializer;
+            break;
+        case VM_FILE:
+            page_initializer = file_backed_initializer;
+            break;
+        }
+
+        // 3. uninit_new를 호출하여 페이지 구조체를 생성한다. -> uninit 상태의 페이지 구조체는 초기화되지 않은 상태를 나타낸다.
+        uninit_new(p, upage, init, type, aux, page_initializer);
+        
         /* TODO: Insert the page into the spt. */
+        spt_insert_page(spt, p);
     }
+    // ✅ TEST : vm_alloc_page_with_initializer
+    // unit_test_vm_alloc_page_with_initializer = true;
+    // ASSERT(unit_test_vm_alloc_page_with_initializer != true);
 err:
     return false;
 }
