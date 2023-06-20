@@ -188,3 +188,14 @@ supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
 	/* TODO: Destroy all the supplemental_page_table hold by thread and
 	 * TODO: writeback all the modified contents to the storage. */
 }
+
+/**
+ * hashing 함수를 작성한다. -> hash byte 함수를 사용한다.
+*/
+uint64_t
+hashing (const struct hash_elem *e, void *aux) {
+    struct page *hash_page = hash_entry(e, struct page, hash_elem);
+    uint64_t hash = hash_bytes(&hash_page->va, sizeof(hash_page->va));
+    return hash;
+}
+
