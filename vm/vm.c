@@ -199,3 +199,16 @@ hashing (const struct hash_elem *e, void *aux) {
     return hash;
 }
 
+/**
+ * hash_elem a의 va(virtual address)와 hash_elem b의 va를 비교한다.
+ * A < B - >true / A >= B -> false
+ * hash_less 비교함수는 나중에 find_elem할 때 사용될 예정!
+*/
+bool
+hash_less (struct hash_elem *a, struct hash_elem *b, void *aux) {
+    struct page *page_a = hash_entry(a, struct page, hash_elem);
+    struct page *page_b = hash_entry(b, struct page, hash_elem);
+
+    return page_a->va < page_b->va;
+}
+
