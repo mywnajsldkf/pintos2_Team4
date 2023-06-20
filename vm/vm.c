@@ -174,6 +174,13 @@ vm_do_claim_page (struct page *page) {
 /* Initialize new supplemental page table */
 void
 supplemental_page_table_init (struct supplemental_page_table *spt UNUSED) {
+    // supplemental_page_table 테이블을 초기화한다.
+    
+    // ✅ TEST: supplemental_page_table_init test
+    // bool initialize_hash = hash_init(&spt->spt_hash, hashing, hash_less, NULL);
+    // ASSERT(initialize_hash != true); // initialize_hash가 true라면 프로그램을 종료시킨다.
+
+    hash_init(&spt->spt_hash, hashing, hash_less, NULL);
 }
 
 /* Copy supplemental page table from src to dst */
