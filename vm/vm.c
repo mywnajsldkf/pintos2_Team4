@@ -63,10 +63,23 @@ err:
 /* Find VA from spt and return page. On error, return NULL. */
 struct page *
 spt_find_page (struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
-	struct page *page = NULL;
-	/* TODO: Fill this function. */
+    /* TODO: Fill this function. */
+    // ✅ TEST: spt_find_page
+	// bool unit_test_spt_find_page = false; 
+    
+    // page 객체를 만들어준다.
+	struct page *page = (struct page *)malloc(sizeof(struct page));
+	page->va = pg_round_down(va);
 
-	return page;
+	// spt_hash에서 va 객체를 찾는다.
+	struct hash_elem *e = hash_find(&spt->spt_hash, &page->hash_elem);
+	free(page);
+
+	// ✅ TEST: spt_find_page
+	// unit_test_spt_find_page = true;
+	// ASSERT(unit_test_spt_find_page != true);	// unit_test_spt_find_page가 true이면 멈춘다.
+
+	return e != NULL ? hash_entry(e, struct page, hash_elem) : NULL;
 }
 
 /* Insert PAGE into spt with validation. */
