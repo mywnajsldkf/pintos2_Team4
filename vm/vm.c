@@ -5,6 +5,7 @@
 #include "vm/inspect.h"
 #include "list.h"
 #include "threads/vaddr.h"
+#include "threads/mmu.h"
 
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
@@ -97,9 +98,10 @@ spt_find_page (struct supplemental_page_table *spt UNUSED, void *va UNUSED) {
     // ✅ TEST: spt_find_page
 	// bool unit_test_spt_find_page = false; 
     
-    // page 객체를 만들어준다.
+    // page dummy 데이터를 할당시킨다.
 	struct page *page = (struct page *)malloc(sizeof(struct page));
-	page->va = pg_round_down(va);
+    // pg_round_down: Round down to neareset page boundary
+	page->va = pg_round_down(va);   // https://github.com/Blue-club/pintos2_Team3/discussions/8#discussion-5312566
 
 	// spt_hash에서 va 객체를 찾는다.
 	struct hash_elem *e = hash_find(&spt->spt_hash, &page->hash_elem);
