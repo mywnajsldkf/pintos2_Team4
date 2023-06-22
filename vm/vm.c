@@ -225,16 +225,30 @@ vm_claim_page (void *va UNUSED) {
 }
 
 /* Claim the PAGE and set up the mmu. */
+// 페이지를 할당하고 mmu를 설정한다.
 static bool
 vm_do_claim_page (struct page *page) {
-    struct frame *frame = vm_get_frame ();
+    struct frame *frame = vm_get_frame ();  // 빈 프레임을 얻는다. -> frame 변수에 얻은 프레임의 주소가 할당된다.
+    // page가 이미 다른 물리 주소 kva와 미리 연결되어있는지 확인한다.
+    if (page->frame != NULL) {
+        return false;
+    }
 
     /* Set links */
-    frame->page = page;
+    frame->page = page;     // 객체 간의 링크를 설정한다.
     page->frame = frame;
 
     /* TODO: Insert page table entry to map page's VA to frame's PA. */
+    // page 객체의 va 멤버에 frame의 kva 멤버(프레임의 가상 주소)를 할당한다.
+    // 페이지 테이블의 엔트리에 페이지의 가상 주소(VA)를 매핑하는 작업을 수행한다.
+    // page->va= frame->kva;   // 잘못된 코드
 
+    struct thread *current = thread_current();
+    // 🚨 writable 수정 필요
+    pml4_set_page(current->pml4, page->va, frame->kva, 1);
+
+    // swap_in() 함수를 호출하여 페이지를 스왑 인(swap in)하고, 스왑된 페이지를 프레임의 가상 주소(KVA)로 복구한다. (by MMU)
+    // swap_in : 해당 페이지를 물리 메모리에 올려준다.
     return swap_in (page, frame->kva);
 }
 
