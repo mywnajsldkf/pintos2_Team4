@@ -48,7 +48,7 @@ struct page {
 	bool writable;
 
 	/* Your implementation */
-	struct hash_elem hash_elem;
+	struct hash_elem hash_elem;	/* 해시 테이블로 구성된 spt의 요소이기 때문에 */
 
 	/* Per-type data are binded into the union.
 	 * Each function automatically detects the current union */
