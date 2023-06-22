@@ -117,12 +117,9 @@ spt_insert_page (struct supplemental_page_table *spt UNUSED,
     /* TODO: Fill this function. */
     struct hash_elem *result = hash_insert(&spt->spt_hash, &page->hash_elem);
 
-    if (result != NULL)
+    if (result == NULL){
         succ = true;
-
-    // ✅ TEST : unit_test_spt_insert_page
-    // bool unit_test_spt_insert_page = succ;
-    // ASSERT(unit_test_spt_insert_page != true);
+    }
     return succ;
 }
 
