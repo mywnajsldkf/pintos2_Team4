@@ -218,8 +218,12 @@ vm_dealloc_page (struct page *page) {
 /* Claim the page that allocate on VA. */
 bool
 vm_claim_page (void *va UNUSED) {
-    struct page *page = NULL;
     /* TODO: Fill this function */
+    // 물리 프레임과 연결할 프레임을 찾는다.
+    struct page *page = spt_find_page (&thread_current()->spt, va);
+    if (page == NULL) {
+        return false;
+    }
 
     return vm_do_claim_page (page);
 }
