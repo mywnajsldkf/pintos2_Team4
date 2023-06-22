@@ -248,7 +248,7 @@ void
 intr_register_int (uint8_t vec_no, int dpl, enum intr_level level,
 		intr_handler_func *handler, const char *name)
 {
-	ASSERT (vec_no < 0x20 || vec_no > 0x2f);
+	ASSERT (vec_no < 0x20 || vec_no > 0x2f);	// 인터럽트 번호가 유효한가?
 	register_handler (vec_no, dpl, level, handler, name);
 }
 

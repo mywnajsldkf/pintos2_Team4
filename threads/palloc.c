@@ -261,13 +261,18 @@ palloc_init (void) {
    FLAGS, in which case the kernel panics. */
 void *
 palloc_get_multiple (enum palloc_flags flags, size_t page_cnt) {
+	// 매개변수에 따라 할당을 위한 풀(pool)을 선택한다.
 	struct pool *pool = flags & PAL_USER ? &user_pool : &kernel_pool;
 
+	// 선택한 풀의 락을 획득한다.
 	lock_acquire (&pool->lock);
+	// 사용 가능한 페이지의 인덱스를 검색하고, 해당 페이지들을 사용 중인 상태로 표시한다.
 	size_t page_idx = bitmap_scan_and_flip (pool->used_map, 0, page_cnt, false);
+	// 락을 해제한다.
 	lock_release (&pool->lock);
 	void *pages;
 
+	// BITMAP_ERROR가 아니라면, 페이지가 성공적으로 할당된 것이므로 -> 메모리 주소를 설정한다.
 	if (page_idx != BITMAP_ERROR)
 		pages = pool->base + PGSIZE * page_idx;
 	else
@@ -281,6 +286,7 @@ palloc_get_multiple (enum palloc_flags flags, size_t page_cnt) {
 			PANIC ("palloc_get: out of pages");
 	}
 
+	// 최종적으로 할당된 메모리의 주소를 반환한다.
 	return pages;
 }
 

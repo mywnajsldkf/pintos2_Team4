@@ -6,6 +6,8 @@
 #include <stdint.h>
 #include "threads/interrupt.h"
 #include "threads/synch.h" // 이것을 추가해야 포인터를 쓸 수 있습니다.
+#define USERPROG
+#define VM
 #ifdef VM
 #include "vm/vm.h"
 #endif
