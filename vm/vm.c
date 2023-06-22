@@ -34,6 +34,9 @@ page_get_type (struct page *page) {
     }
 }
 
+// 연결 리스트를 사용하여 프레임 테이블을 구현한다. 
+struct list frame_table;
+
 /* Helpers */
 static struct frame *vm_get_victim (void);
 static bool vm_do_claim_page (struct page *page);
@@ -154,11 +157,31 @@ vm_evict_frame (void) {
  * space.*/
 static struct frame *
 vm_get_frame (void) {
-    struct frame *frame = NULL;
+    struct frame *frame = (struct frame *)malloc(sizeof(struct frame));
     /* TODO: Fill this function. */
+    // ✅ TEST: vm_get_frame 
+    // bool unit_vm_get_frame = false;
 
+    // 할당된 메모리의 주소를 반환하여 frame의 kva에 대입한다.
+    frame->kva = palloc_get_page(PAL_USER);
+    frame->page = NULL;
+
+    // 페이지 할당을 실패한 경우
+    if (frame->kva == NULL) {
+        PANIC ("todo");
+        // vm_evict_frame(); // 정상적으로 물리 프레임 주소를 할당받지 못할 경우
+    }
+    
+    // frame_table에 넣어서 관리한다.
+    list_push_back(&frame_table, &frame->frame_elem);
+    
     ASSERT (frame != NULL);
     ASSERT (frame->page == NULL);
+
+    // ✅ TEST: vm_get_frame 
+    // unit_vm_get_frame = true;
+    // ASSERT(unit_vm_get_frame != true);
+
     return frame;
 }
 
@@ -263,3 +286,7 @@ hash_less (struct hash_elem *a, struct hash_elem *b, void *aux) {
     return page_a->va < page_b->va;
 }
 
+void
+frame_table_init () {
+    list_init(&frame_table);
+}

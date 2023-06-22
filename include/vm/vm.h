@@ -63,8 +63,7 @@ struct page {
 
 /* The representation of "frame" */
 struct frame {
-	void *kva;
-	struct page *page;
+	struct list_elem frame_elem;
 };
 
 /* The function table for page operations.
@@ -114,4 +113,6 @@ enum vm_type page_get_type (struct page *page);
 
 uint64_t hashing (const struct hash_elem *e, void *aux);
 bool hash_less (struct hash_elem *a, struct hash_elem *b, void *aux);
+void frame_table_init();
+
 #endif  /* VM_VM_H */

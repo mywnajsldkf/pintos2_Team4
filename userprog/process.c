@@ -64,7 +64,8 @@ process_create_initd (const char *file_name) {
 static void
 initd (void *f_name) {
 #ifdef VM
-	supplemental_page_table_init (&thread_current ()->spt);
+	frame_table_init();
+	supplemental_page_table_init (&thread_current ()->spt);	// 실행중인 스레드의 spt를 초기화한다.
 #endif
 
 	process_init ();
@@ -180,6 +181,7 @@ __do_fork (void *aux) {
 
 	process_activate (current);
 #ifdef VM
+	frame_table_init();
 	supplemental_page_table_init (&current->spt);
 	if (!supplemental_page_table_copy (&current->spt, &parent->spt))
 		goto error;
