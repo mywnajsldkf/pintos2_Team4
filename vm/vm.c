@@ -196,6 +196,11 @@ vm_handle_wp (struct page *page UNUSED) {
 }
 
 /* Return true on success */
+/**
+ * 함수 페이지 폴트 처리
+ * f: intr_frame 포인터, addr: 오류 주소, user: 사용자 공간에서 오류가 발생했는지 나타내는 플래그
+ * write: 쓰기 액세스로 인한 것, not_present: 폴트가 존재하지 않는 페이지로 인한 것인가
+*/
 bool
 vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
         bool user UNUSED, bool write UNUSED, bool not_present UNUSED) {
@@ -203,8 +208,29 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
     struct page *page = NULL;
     /* TODO: Validate the fault */
     /* TODO: Your code goes here */
+    if (addr == NULL)
+    {
+        return false;
+    }
+    
+    // kernel 영역인가(vaddr은 virtual address, 즉 가상 주소를 말한다)
+    if (is_kernel_vaddr(addr))
+    {
+        return false;
+    }
 
-    return vm_do_claim_page (page);
+    // 존재하지 않은 페이지로 발생했다면 -> 접근한 메모리에 physical memory가 존재하지 않는다면
+    if (not_present)
+    {
+        page = spt_find_page(spt, addr);
+        if (page == NULL)
+        {
+            return false;
+        }
+        
+        return vm_do_claim_page (page);
+    }
+    return false;
 }
 
 /* Free the page.

@@ -64,6 +64,8 @@ struct page {
 
 /* The representation of "frame" */
 struct frame {
+	void *kva;			// page 구조체의 va + KERNBASE
+	struct page *page;	// page를 역참조하기 위한 요소
 	struct list_elem frame_elem;
 };
 

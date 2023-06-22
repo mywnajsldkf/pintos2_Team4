@@ -17,3 +17,10 @@ struct file *process_get_file(int fd);
 void process_close_file(int fd);
 struct thread *get_child_process(int pid);
 #endif /* userprog/process.h */
+
+struct lazy_load_segment_info {
+    struct file* file;
+    off_t ofs;
+    uint32_t page_read_bytes;
+    uint32_t page_zero_bytes;
+};
