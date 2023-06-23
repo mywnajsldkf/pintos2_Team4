@@ -7,6 +7,8 @@
 #include "threads/vaddr.h"
 #include "threads/mmu.h"
 
+#define ONE_MB (1 << 20)    // 1MB
+
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 void
@@ -195,6 +197,10 @@ vm_get_frame (void) {
 /* Growing the stack. */
 static void
 vm_stack_growth (void *addr UNUSED) {
+    addr = pg_round_down(addr);
+    if(!vm_alloc_page(VM_ANON | VM_MARKER_0, addr, true)){
+        exit(-1);
+    }
 }
 
 /* Handle the fault on write_protected page */
@@ -224,6 +230,14 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
     if (is_kernel_vaddr(addr))
     {
         return false;
+    }
+
+    // rsp를 받아와 현재 스레드의 rsp 주소를 설정한다.
+    uintptr_t rsp = f->rsp;
+    // printf("✅rsp: %016llx\n", rsp);
+
+    if((USER_STACK - ONE_MB <= rsp) && (rsp-8 <= addr) && (addr < USER_STACK)) {
+        vm_stack_growth(addr);
     }
 
     // 존재하지 않은 페이지에 접근하여 page fault가 발생했다면 -> 접근한 메모리에 physical memory가 존재하지 않는다면
