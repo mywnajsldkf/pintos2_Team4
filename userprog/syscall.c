@@ -119,8 +119,8 @@ void check_address(void *addr){
 		exit(-1);
 	if (!is_user_vaddr(addr))
 		exit(-1);
-	if (pml4_get_page(thread_current()->pml4, addr) == NULL)
-		exit(-1);
+	// if (pml4_get_page(thread_current()->pml4, addr) == NULL)	// 🚨 check address 확인 필요
+	// 	exit(-1);
 	// if (addr == NULL || !(is_user_vaddr(addr))||pml4_get_page(cur->pml4, addr) == NULL){
 	// 	exit(-1);
 	// }
