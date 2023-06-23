@@ -83,7 +83,8 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 
         // 3. uninit_new를 호출하여 페이지 구조체를 생성한다. -> uninit 상태의 페이지 구조체는 초기화되지 않은 상태를 나타낸다.
         uninit_new(p, upage, init, type, aux, page_initializer);
-        
+        p->writable = writable;
+
         /* TODO: Insert the page into the spt. */
         return spt_insert_page(spt, p);
     }
@@ -281,7 +282,7 @@ vm_do_claim_page (struct page *page) {
 
     struct thread *current = thread_current();
     // 🚨 writable 수정 필요
-    pml4_set_page(current->pml4, page->va, frame->kva, 1);
+    pml4_set_page(current->pml4, page->va, frame->kva, page->writable);
 
     // swap_in() 함수를 호출하여 페이지를 스왑 인(swap in)하고, 스왑된 페이지를 프레임의 가상 주소(KVA)로 복구한다. (by MMU)
     // swap_in : 해당 페이지를 물리 메모리에 올려준다.
