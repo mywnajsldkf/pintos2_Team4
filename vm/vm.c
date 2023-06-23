@@ -59,13 +59,16 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 
     /* Check wheter the upage is already occupied or not. */
     // 0. spt_find_page로 `upage`가 이미 할당되었는지 확인한다.
-    if (spt_find_page (spt, upage) == NULL) {   
+    if (spt_find_page (spt, upage) == NULL) {       // upage(가상 주소)에 데이터가 없다면
         /* TODO: Create the page, fetch the initialier according to the VM type,
          * TODO: and then create "uninit" page struct by calling uninit_new. You
          * TODO: should modify the field after calling the uninit_new. */
         // 1. 새로운 페이지를 생성한다. : 가상 메모리와 관련된 정보를 갖는다.
         struct page *p = (struct page *)malloc(sizeof(struct page));
-    	bool (*page_initializer) (struct page *, enum vm_type, void *);
+        /**
+         * page_initializer가 3개의 매개변수를 갖는 함수를 가리키는 함수 포인터이다. 
+        */
+    	bool (*page_initializer) (struct page *, enum vm_type, void *); 
 
         // 2. VM 타입에 따른 초기화 함수를 호출한다.
         switch (VM_TYPE(type))
@@ -120,6 +123,7 @@ spt_insert_page (struct supplemental_page_table *spt UNUSED,
         struct page *page UNUSED) {
     int succ = false;
     /* TODO: Fill this function. */
+    // hash_insert: 이미 page가 들어가있는 상태라면 old값을 return한다.
     struct hash_elem *result = hash_insert(&spt->spt_hash, &page->hash_elem);
 
     if (result == NULL){
@@ -221,7 +225,7 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
         return false;
     }
 
-    // 존재하지 않은 페이지로 발생했다면 -> 접근한 메모리에 physical memory가 존재하지 않는다면
+    // 존재하지 않은 페이지에 접근하여 page fault가 발생했다면 -> 접근한 메모리에 physical memory가 존재하지 않는다면
     if (not_present)
     {
         page = spt_find_page(spt, addr);
@@ -257,7 +261,7 @@ vm_claim_page (void *va UNUSED) {
 }
 
 /* Claim the PAGE and set up the mmu. */
-// 페이지를 할당하고 mmu를 설정한다.
+// 해당 페이지에 물리 프레임 할당을 요청한다.
 static bool
 vm_do_claim_page (struct page *page) {
     struct frame *frame = vm_get_frame ();  // 빈 프레임을 얻는다. -> frame 변수에 얻은 프레임의 주소가 할당된다.

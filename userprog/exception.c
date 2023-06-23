@@ -135,7 +135,7 @@ page_fault (struct intr_frame *f) {
 	intr_enable ();
 
 	/* Determine cause. */
-	not_present = (f->error_code & PF_P) == 0;
+	not_present = (f->error_code & PF_P) == 0;	// PF_P: 0x1 => 비트 AND 연산 결과가 0인지 확인하여 비교한다. 
 	write = (f->error_code & PF_W) != 0;
 	user = (f->error_code & PF_U) != 0;
 
