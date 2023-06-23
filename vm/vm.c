@@ -1,5 +1,5 @@
 /* vm.c: Generic interface for virtual memory objects. */
-
+#include "string.h"
 #include "threads/malloc.h"
 #include "vm/vm.h"
 #include "vm/inspect.h"
