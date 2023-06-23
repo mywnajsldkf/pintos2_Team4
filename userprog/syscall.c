@@ -121,6 +121,7 @@ void check_address(void *addr){
 		exit(-1);
 	/**
 	 * syscall에서는 eager loading이었기 때문에 로딩이 된 상태이지만, lazy loading은 아직 물리 메모리에 로딩되지 않아서 확인할 
+	 * 지금은 page fault가 구현되어있으니까, 할 필요 없다.
 	*/
 	// if (pml4_get_page(thread_current()->pml4, addr) == NULL)	// 🚨 check address 확인 필요
 	// 	exit(-1);

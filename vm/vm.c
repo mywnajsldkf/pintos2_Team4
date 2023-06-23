@@ -7,6 +7,8 @@
 #include "threads/vaddr.h"
 #include "threads/mmu.h"
 
+#define ONE_MB (1 << 20)    // 1MB
+
 /* Initializes the virtual memory subsystem by invoking each subsystem's
  * intialize codes. */
 void
@@ -83,7 +85,8 @@ vm_alloc_page_with_initializer (enum vm_type type, void *upage, bool writable,
 
         // 3. uninit_new를 호출하여 페이지 구조체를 생성한다. -> uninit 상태의 페이지 구조체는 초기화되지 않은 상태를 나타낸다.
         uninit_new(p, upage, init, type, aux, page_initializer);
-        
+        p->writable = writable;
+
         /* TODO: Insert the page into the spt. */
         return spt_insert_page(spt, p);
     }
@@ -194,6 +197,10 @@ vm_get_frame (void) {
 /* Growing the stack. */
 static void
 vm_stack_growth (void *addr UNUSED) {
+    addr = pg_round_down(addr);
+    if(!vm_alloc_page(VM_ANON | VM_MARKER_0, addr, true)){
+        exit(-1);
+    }
 }
 
 /* Handle the fault on write_protected page */
@@ -204,8 +211,11 @@ vm_handle_wp (struct page *page UNUSED) {
 /* Return true on success */
 /**
  * 함수 페이지 폴트 처리
- * f: intr_frame 포인터, addr: 오류 주소, user: 사용자 공간에서 오류가 발생했는지 나타내는 플래그
- * write: 쓰기 액세스로 인한 것, not_present: 폴트가 존재하지 않는 페이지로 인한 것인가
+ * f: intr_frame 포인터(시스템 콜 또는 페이지 폴트가 발생했을 때, 그 순간의 레지스터 값을 담고 있음), 
+ * addr: page fault를 일으칸 가상 주소, 
+ * user: 사용자 공간에서 오류가 발생했는지 나타내는 플래그(true: 유저 모드에서 페이지 폴트가 발생)
+ * write: 쓰기 액세스로 인한 것(true: 쓰기 요청 / false: 읽기 요청)
+ * not_present: 폴트가 존재하지 않는 페이지로 인한 것인가(false: read-only 페이지에 write를 하려고 함)
 */
 bool
 vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
@@ -214,6 +224,8 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
     struct page *page = NULL;
     /* TODO: Validate the fault */
     /* TODO: Your code goes here */
+
+    // addr 유효성 검증
     if (addr == NULL)
     {
         return false;
@@ -223,6 +235,14 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
     if (is_kernel_vaddr(addr))
     {
         return false;
+    }
+
+    // rsp를 받아와 현재 스레드의 rsp 주소를 설정한다.
+    uintptr_t rsp = f->rsp;
+    // printf("✅rsp: %016llx\n", rsp);
+
+    if((USER_STACK - ONE_MB <= rsp) && (rsp-8 <= addr) && (addr < USER_STACK)) {
+        vm_stack_growth(addr);
     }
 
     // 존재하지 않은 페이지에 접근하여 page fault가 발생했다면 -> 접근한 메모리에 physical memory가 존재하지 않는다면
@@ -281,7 +301,7 @@ vm_do_claim_page (struct page *page) {
 
     struct thread *current = thread_current();
     // 🚨 writable 수정 필요
-    pml4_set_page(current->pml4, page->va, frame->kva, 1);
+    pml4_set_page(current->pml4, page->va, frame->kva, page->writable);
 
     // swap_in() 함수를 호출하여 페이지를 스왑 인(swap in)하고, 스왑된 페이지를 프레임의 가상 주소(KVA)로 복구한다. (by MMU)
     // swap_in : 해당 페이지를 물리 메모리에 올려준다.
