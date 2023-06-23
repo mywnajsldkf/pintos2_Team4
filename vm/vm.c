@@ -349,12 +349,12 @@ void
 supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
     /* TODO: Destroy all the supplemental_page_table hold by thread and
      * TODO: writeback all the modified contents to the storage. */
-    hash_clear(&spt->spt_hash, clear_spt);  // hash_destroy vs hash_clear
+    hash_clear(&spt->spt_hash, spt_clear_action);  // hash_destroy vs hash_clear: hash_destroy -> 아마도 hash_init 전으로 돌아가는 것 같음!!!
 }
 
 // hash_action_function
 void
-clear_spt(struct hash_elem *e, void *aux) {
+spt_clear_action(struct hash_elem *e, void *aux) {
     struct page *page = hash_entry(e, struct page, hash_elem);
     destroy(page);
     free(page);    
