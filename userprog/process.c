@@ -814,8 +814,7 @@ setup_stack (struct intr_frame *if_) {
 		success = vm_claim_page(stack_bottom);
 		if (success)
 		{
-			printf("if_->rsp2222: %p\n", if_->rsp);
-			if_->rsp = USER_STACK;	
+			if_->rsp = USER_STACK;
 			// 스택 포인터를 USER_STACK으로 설정하여, 인터럽트 프레임에 대한 초기 스택 포인터를 설정한다.
 			// argument_stack 함수에서 위치(rsp)부터 인자를 push한다. 
 			// setup_stack이 호출되는 시점을 생각해라.

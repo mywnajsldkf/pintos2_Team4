@@ -211,8 +211,11 @@ vm_handle_wp (struct page *page UNUSED) {
 /* Return true on success */
 /**
  * 함수 페이지 폴트 처리
- * f: intr_frame 포인터, addr: 오류 주소, user: 사용자 공간에서 오류가 발생했는지 나타내는 플래그
- * write: 쓰기 액세스로 인한 것, not_present: 폴트가 존재하지 않는 페이지로 인한 것인가
+ * f: intr_frame 포인터(시스템 콜 또는 페이지 폴트가 발생했을 때, 그 순간의 레지스터 값을 담고 있음), 
+ * addr: page fault를 일으칸 가상 주소, 
+ * user: 사용자 공간에서 오류가 발생했는지 나타내는 플래그(true: 유저 모드에서 페이지 폴트가 발생)
+ * write: 쓰기 액세스로 인한 것(true: 쓰기 요청 / false: 읽기 요청)
+ * not_present: 폴트가 존재하지 않는 페이지로 인한 것인가(false: read-only 페이지에 write를 하려고 함)
 */
 bool
 vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
@@ -221,6 +224,8 @@ vm_try_handle_fault (struct intr_frame *f UNUSED, void *addr UNUSED,
     struct page *page = NULL;
     /* TODO: Validate the fault */
     /* TODO: Your code goes here */
+
+    // addr 유효성 검증
     if (addr == NULL)
     {
         return false;
