@@ -352,6 +352,14 @@ supplemental_page_table_kill (struct supplemental_page_table *spt UNUSED) {
     hash_clear(&spt->spt_hash, clear_spt);  // hash_destroy vs hash_clear
 }
 
+// hash_action_function
+void
+clear_spt(struct hash_elem *e, void *aux) {
+    struct page *page = hash_entry(e, struct page, hash_elem);
+    destroy(page);
+    free(page);    
+}
+
 /**
  * hashing 함수를 작성한다. -> hash byte 함수를 사용한다.
 */

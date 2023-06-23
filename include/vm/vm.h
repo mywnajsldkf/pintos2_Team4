@@ -117,5 +117,6 @@ enum vm_type page_get_type (struct page *page);
 uint64_t hashing (const struct hash_elem *e, void *aux);
 bool hash_less (struct hash_elem *a, struct hash_elem *b, void *aux);
 void frame_table_init();
+void clear_spt(struct hash_elem *e, void *aux);
 
 #endif  /* VM_VM_H */
