@@ -119,8 +119,11 @@ void check_address(void *addr){
 		exit(-1);
 	if (!is_user_vaddr(addr))
 		exit(-1);
-	if (pml4_get_page(thread_current()->pml4, addr) == NULL)
-		exit(-1);
+	/**
+	 * syscall에서는 eager loading이었기 때문에 로딩이 된 상태이지만, lazy loading은 아직 물리 메모리에 로딩되지 않아서 확인할 
+	*/
+	// if (pml4_get_page(thread_current()->pml4, addr) == NULL)	// 🚨 check address 확인 필요
+	// 	exit(-1);
 	// if (addr == NULL || !(is_user_vaddr(addr))||pml4_get_page(cur->pml4, addr) == NULL){
 	// 	exit(-1);
 	// }

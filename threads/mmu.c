@@ -8,6 +8,8 @@
 #include "threads/mmu.h"
 #include "intrinsic.h"
 
+// mmu(memory management unit): 컴퓨터의 가상 메모리 시스템 관리를 담당하는 하드웨어 구성 요소인 메모리 관리 장치
+// pgdir_walk, pdpe_walk, pml4e_walk: 서로 다른 레벨에서 페이지 테이블을 순회하여 주어진 페이지 테이블 항목을 조회하거나 생성하는데 사용된다.
 static uint64_t *
 pgdir_walk (uint64_t *pdp, const uint64_t va, int create) {
 	int idx = PDX (va);
@@ -92,6 +94,7 @@ pml4e_walk (uint64_t *pml4e, const uint64_t va, int create) {
  * virtual addresses, but none for user virtual addresses.
  * Returns the new page directory, or a null pointer if memory
  * allocation fails. */
+// 커널 가상 주소에 대한 매핑은 있지만 사용자 가상 주소에 대한 매핑은 없는 새로운 PML4 페이지 디렉토리를 생성한다.
 uint64_t *
 pml4_create (void) {
 	uint64_t *pml4 = palloc_get_page (0);
@@ -100,6 +103,10 @@ pml4_create (void) {
 	return pml4;
 }
 
+/**
+ * pt_for_each, pgdir_for_each, pdp_for_each:
+ * 페이지 테이블을 반복하고 각 페이지 테이블 항목에서 작업을 수행하는데 사용되는 유틸리티 기능
+*/
 static bool
 pt_for_each (uint64_t *pt, pte_for_each_func *func, void *aux,
 		unsigned pml4_index, unsigned pdp_index, unsigned pdx_index) {
@@ -155,6 +162,9 @@ pml4_for_each (uint64_t *pml4, pte_for_each_func *func, void *aux) {
 	return true;
 }
 
+/**
+ * pt_destroy, pgdir_destroy, pdpe_destroy: 페이지 테이블의 할당을 해제하고 해당 메모리를 해제하는데 사용된다.
+*/
 static void
 pt_destroy (uint64_t *pt) {
 	for (unsigned i = 0; i < PGSIZE / sizeof(uint64_t *); i++) {
@@ -229,6 +239,13 @@ pml4_get_page (uint64_t *pml4, const void *uaddr) {
  * otherwise it is read-only.
  * Returns true if successful, false if memory allocation
  * failed. */
+/**
+ * pml4_set_page: 페이지 맵 레벨4(PML4)에 대한 매핑을 추가한다.
+ * 사용자 가상 페이지(UPAGE)와 커널 가상 주소(KPAGE)에 해당하는 물리적 프레임 간의 매핑을 설정한다.
+ * pml4: 테이블의 시작 주소, upage: 사용자 가상 페이지 주소->이미 매핑이 존재하지 않아야 한다.
+ * kpage: 커널 가상 주소에 해당하는 물리적 프레임의 주소 -> palloc_get_page()를 사용하여 사용자 풀에서 얻은 페이지
+ * rw: 새로운 페이지의 속성을 지정하는 플래그(true: 읽기/쓰기, false: 읽기 전용)
+*/
 bool
 pml4_set_page (uint64_t *pml4, void *upage, void *kpage, bool rw) {
 	ASSERT (pg_ofs (upage) == 0);
@@ -236,10 +253,13 @@ pml4_set_page (uint64_t *pml4, void *upage, void *kpage, bool rw) {
 	ASSERT (is_user_vaddr (upage));
 	ASSERT (pml4 != base_pml4);
 
+	// pml4e_walk: PML4 엔트리에 대한 포인터를 얻는다. 
+	// upag에 해당하는 페이지 테이블 엔트리가 이미 존재한다면 이를 반환한다.
 	uint64_t *pte = pml4e_walk (pml4, (uint64_t) upage, 1);
 
 	if (pte)
-		*pte = vtop (kpage) | PTE_P | (rw ? PTE_W : 0) | PTE_U;
+		*pte = vtop (kpage) | PTE_P | (rw ? PTE_W : 0) | PTE_U;	
+		// 물리 주소를 가상 주소로 변환하여 엔트리에 저장하고, 페이지 플래그를 설정한다.
 	return pte != NULL;
 }
 
