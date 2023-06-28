@@ -19,6 +19,7 @@
 void syscall_entry (void);
 void syscall_handler (struct intr_frame *);
 void check_address(void *addr);
+bool check_fd(int fd);
 void halt(void);
 void exit(int status);
 bool create(const char *file, unsigned initial_size);
@@ -128,6 +129,15 @@ void check_address(void *addr){
 	// if (addr == NULL || !(is_user_vaddr(addr))||pml4_get_page(cur->pml4, addr) == NULL){
 	// 	exit(-1);
 	// }
+}
+
+bool check_fd(int fd){
+	if(fd < 0 || fd >= FDT_COUNT_LIMIT){
+		return false;
+	}
+	else {
+		return true;
+	}
 }
 
 // pintos를 종료시키는 시스템 콜
