@@ -118,4 +118,27 @@ do_mmap (void *addr, size_t length, int writable,
 /* Do the munmap */
 void
 do_munmap (void *addr) {
+	struct thread *curr = thread_current();
+	while (true)
+	{
+		struct supplemental_page_table *spt = &curr->spt;
+		struct page *p = spt_find_page(spt, addr);
+
+		if (p == NULL)
+		{
+			return NULL;
+		}
+
+		struct lazy_load_segment_info *lazy_load_segment_info = (struct lazy_load_segment_info *)p->uninit.aux;
+
+		// 해당 페이지가 변경이 되어 있는가 -> dirty 비트인지 확인한다.
+		if (pml4_is_dirty(curr->pml4, p->va))
+		{
+			file_write_at(lazy_load_segment_info->file, addr, lazy_load_segment_info->page_read_bytes, lazy_load_segment_info->ofs);
+			pml4_set_dirty(curr->pml4, p->va, 0); 
+		}
+		
+		pml4_clear_page(curr->pml4, p->va);
+		addr += PGSIZE;
+	}
 }
