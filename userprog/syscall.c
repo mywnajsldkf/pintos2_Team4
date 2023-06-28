@@ -234,6 +234,14 @@ int read(int fd, void *buffer, unsigned size)
 			return -1;
 		}
 		struct file *file = process_get_file(fd);
+		struct thread *thread = thread_current();
+		struct page *page = spt_find_page(&thread->spt, buffer);
+
+		if(page == NULL || page->writable == 0) {	// buffer(내가 본 책의 내용을 작성하는 공책의 권한을 확인해야 한다.)
+			lock_release(&filesys_lock);
+			exit(-1);
+		}
+
 		if (file == NULL)
 		{
 			lock_release(&filesys_lock);
