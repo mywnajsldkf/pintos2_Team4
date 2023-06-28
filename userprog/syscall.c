@@ -112,6 +112,10 @@ syscall_handler (struct intr_frame *f UNUSED) {
 		break;
 	case SYS_CLOSE:
 		close(f->R.rdi);
+		break;
+	case SYS_MMAP:
+		f->R.rax = mmap(f->R.rdi, f->R.rsi, f->R.rdx, f->R.r10, f->R.r8);
+		break;
 	}
 }
 
@@ -311,3 +315,70 @@ tid_t fork(const char *thread_name, struct intr_frame *f)
 {
 	return process_fork(thread_name, f);
 }
+
+
+void *mmap(void *addr, size_t length, int writable, int fd, off_t offset)
+{
+	struct supplemental_page_table *spt = &thread_current()->spt;
+	struct file *file = process_get_file(fd);
+
+	if (file == NULL)
+	{
+		return MAP_FAILED;
+	}
+
+	// offset 값이 PGSIZE에 알맞게 align되어 있는지 확인한다.
+	if (pg_round_down(offset) != offset)
+	{ 
+		return MAP_FAILED;
+	}
+
+	// addr의 값이 유효한지 확인한다.
+	// addr이 NULL 값인가?
+	if (addr == NULL || addr == 1) 
+	{
+		return MAP_FAILED;
+	}
+
+	if (!is_user_vaddr(addr + length) || !is_user_vaddr(addr))
+	{	
+		return MAP_FAILED;
+	}
+	
+	// 시작점이 PGSIZE로 정렬되어있는지 확인한다.
+	if (pg_round_down(addr) != addr)
+	{
+		return MAP_FAILED;
+	}
+
+	// length가 0이하인지 확인한다.
+	if ((long long)length <= 0)		// int 형으로 왜 바꿔주어야 하는지
+	{
+		// printf("long long: %lu\n", length);
+		return MAP_FAILED;
+	}
+
+	// 매핑하려는 페이지가 이미 존재하는 페이지와 겹치면(==spt에 존재하는 페이지)
+	if (spt_find_page(spt, addr) != NULL) 
+	{
+		return MAP_FAILED;
+	}
+
+	// fd값이 표준입력 또는 표준 출력인지 확인하고 해당 fd를 통해 가져온 file 구조체가 유효한지 검증한다. 
+	if (!check_fd(fd)) {
+		return MAP_FAILED;
+	}
+
+	if (check_fd(fd))
+	{
+		// 파일 구조체 검증
+		if (file_length(file) == NULL)
+		{
+			return MAP_FAILED;
+		}
+	}
+
+	// 검증을 성공적으로 통과하면 do_mmap() 함수 호출하여 실제 메모리 매핑을 진행한다.
+	return do_mmap(addr, length, writable, file, offset);
+}
+
